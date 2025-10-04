@@ -1,0 +1,112 @@
+﻿<Window x:Class="UserPanelWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UserPanelWPF"
+        Background="Black"
+        
+        mc:Ignorable="d"
+        Title="MainWindow" Height="700" Width="400">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="RootGrid" Background="Black">
+
+            <!-- Centered square animation box -->
+            <Border x:Name="AnimationBox"
+        Width="200" Height="200"
+        Background="LightGray"
+        BorderBrush="Black" BorderThickness="2"
+        CornerRadius="6"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        ClipToBounds="True">
+
+                <Canvas Background="Transparent">
+                    <!-- Container for two vectors side by side -->
+                    <StackPanel x:Name="MovingVectorContainer" Orientation="Horizontal">
+                        <StackPanel.RenderTransform>
+                            <TranslateTransform x:Name="VectorTransform" />
+                        </StackPanel.RenderTransform>
+
+                        <!-- Original vector -->
+                        <Viewbox Width="150" Height="150" Margin="0">
+                            <Viewbox.RenderTransform>
+                                <ScaleTransform x:Name="VectorScale1" ScaleX="1.38" ScaleY="1" CenterX="75" CenterY="75"/>
+                            </Viewbox.RenderTransform>
+                            <ContentControl Content="{StaticResource ActivityVector}" />
+                        </Viewbox>
+
+                        <!-- Copy that slides in -->
+                        <Viewbox Width="150" Height="150" Margin="0">
+                            <Viewbox.RenderTransform>
+                                <ScaleTransform x:Name="VectorScale2" ScaleX="1.38" ScaleY="1" CenterX="75" CenterY="75"/>
+                            </Viewbox.RenderTransform>
+                            <ContentControl Content="{StaticResource ActivityVector}" />
+                        </Viewbox>
+                    </StackPanel>
+                </Canvas>
+            </Border>
+
+            <!-- 👇 Sliders under the animation box -->
+            <!--<StackPanel VerticalAlignment="Bottom" Margin="20" Orientation="Vertical">
+                <TextBlock Text="Scale Y:" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Slider x:Name="ScaleYSlider" Minimum="0.5" Maximum="2" Value="1" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+
+                <TextBlock Text="Animation Speed (seconds):" FontWeight="Bold" Margin="0,20,0,4"/>
+                <Slider x:Name="SpeedSlider" Minimum="0.1" Maximum="5" Value="3" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+            </StackPanel>-->
+
+        </Grid>
+
+
+        <!--<TextBlock Grid.Row="0" 
+               Foreground="SlateGray"  
+               FontSize="72"
+               Style="{StaticResource fan-icon}" 
+               RenderTransformOrigin="0.5,0.5"
+               >
+            <TextBlock.RenderTransform>
+                <RotateTransform x:Name="Rotation" Angle="0">
+
+                </RotateTransform>
+            </TextBlock.RenderTransform>
+        </TextBlock>-->
+        
+        
+
+        <StackPanel Grid.Row="1">
+            <!--<Slider x:Name="Slider_Speed" IsSnapToTickEnabled="True" TickFrequency="0.1" Value="2" Minimum="0.1" Maximum="4"
+             Margin="30 30"-->
+
+
+            <Slider x:Name="Slider_Speed" IsSnapToTickEnabled="True" TickFrequency="0.5" Value="2" Minimum="0.5" Maximum="4"
+             Margin="30 30"
+             ValueChanged="Slider_Speed_ValueChanged"
+             />
+            <Grid>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="3*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" x:Name="Btn_Trigged" Style="{StaticResource btn-secondary}" Content="" Click="Btn_TriggedState_Click" />
+                <!--#endregion-->
+                <Button Grid.Column="1" x:Name="Btn_OnOff" Style="{StaticResource btn-primary}" Content="START" Click="Btn_Armed_Click" />
+                <!--<Button x:Name="Btn_OnOff" Style="{StaticResource btn-primary}" Content="START" />-->
+                <!--Bra för skrollning-->
+            </Grid>
+
+            <ListBox x:Name="LB_EventLog" Style="{StaticResource lb-primary}" Height="100" Margin="0 10 0 0" />
+        </StackPanel>
+
+
+
+    </Grid>
+</Window>
