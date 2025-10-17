@@ -6,8 +6,10 @@
     <Application.Resources>
 
         <ResourceDictionary>
-
+            
+            
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="images/bell.xaml"/>
                 <ResourceDictionary Source="images/activity.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 

@@ -1,24 +1,57 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using UserPanelWPF.Models;
 using UserPanelWPF.Services;
-using System.Windows.Media.Animation;
+using UserPanelWPF.ViewModels;
 
 namespace UserPanelWPF
 {
+
+
 
     public partial class MainWindow : Window
     {
         private string _logFilePath = "";
         private DoubleAnimation _animation;
         private ObservableCollection<string>? _eventLog;
+
+        private double _vibrationSpeedValue = 0;
+        private double _linePositionSlider_Value = 0;
+        private DispatcherTimer _timer;
+
+        public List<DeviceLog> DeviceLogs { get; set; } = new List<DeviceLog>();
+        public List<double> SliderValues { get; set; } = new List<double>();
+        double _previousSliderValues = -1;
+        bool _hasSliderChanged = false;
+
+        bool _skipSliderAction = true;
+
+        MainWindowViewModel _vm;
+
         public MainWindow()
         {
             InitializeComponent();
             Loaded += MainWindow_Loaded;    
             InitializeFeatures();
+            StartWorker();
 
+            _vm = new MainWindowViewModel();
+
+        }
+
+        //This methods takes everything from the ViewModel and updates the view accordingly.
+        public void UpdateView()
+        {
+            Btn_OnOff.Content = _vm.ButtonVM.OnOffContent;
+            Btn_OnOff.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_vm.ButtonVM.OnOffForeground));
+            Btn_OnOff.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_vm.ButtonVM.OnOffBorderBrush));
+            
+            BellImage.Source = ChangeColor(BellImage.Source, _vm.ButtonVM.TrigContent);
+            Btn_Trigged.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_vm.ButtonVM.TrigForeground));
+            Btn_Trigged.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_vm.ButtonVM.TrigBorderBrush));
         }
 
         public void InitializeFeatures()
@@ -27,107 +60,139 @@ namespace UserPanelWPF
             LB_EventLog.ItemsSource = _eventLog;
         }
 
-        public void UpdateUserPanelView()
+        private void StartWorker()
         {
-            //VibrationDetector.VibrationDetectorId;
-            //VibrationDetector.DeviceName;
-            //VibrationDetector.Location;
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromSeconds(0.5);
+            _timer.Tick += (s, e) => DoWork();
+            _timer.Start();
+        }
 
-            //if( VibrationDetector.AlarmArmed)
-            //{
+        public async void PostSliderValue()
+        {
+            //Check length of SliderValues list
+            if ( (SliderValues.Count == _previousSliderValues) && (_hasSliderChanged == true) )
+            {
 
-            //}
+                Console.WriteLine("Slider has not changed for 1 second -> posting new value to API.");
 
-            //Btn_OnOff.Content = "STOP";
-            //Btn_OnOff.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F40B0B")); // Red
-            //Btn_OnOff.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F40B0B")); // Red
+                var sliderValue = SliderValues.Last();
 
-            //LogMessage(DeviceActions.GetDeviceName() + " has started.");
+                string logMessage = await DeviceActions.SetThresholdLevel(sliderValue);
+                LogMessage(logMessage);
+                
+                SyncUserPanelWPF();
+
+                //double testvalueSpeed = _vibrationSpeedValue;
+
+                SliderValues.Clear();
+                _previousSliderValues = -1;
+                _hasSliderChanged = false;
+            }
+            else
+            {
+                _previousSliderValues = SliderValues.Count;
+                Console.WriteLine("Slider has changed, waiting for it to stabilize...");
+            }
+        }
+
+        //This work is done once every second.
+        private void DoWork()
+        {
+            //0 till 100
+            //HorizontalLine.Y1 = 100;
+
+            PostSliderValue();
+            // Runs every second
+            //Console.WriteLine($"Tick doing work at {DateTime.Now}");
+
+            SyncUserPanelWPF();
+        }
+        public void UpdateUserPanelView(DeviceLog dl)
+        {
+            //Animation update utifrån slider value + threshold + vibration level
+
+            //Vibration level
+            ScaleY_VibrationLevelChanged(VibrationDetector.VibrationLevel);
+            _vibrationSpeedValue = (double)VibrationDetector.VibrationLevel;
+            VibrationSpeed_ValueChanged();
+
+            //Armknapp
+            Btn_OnOff.Content = DeviceActions.GetArmedState() ? "STOP" : "START";
+            Btn_OnOff.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(DeviceActions.GetArmedState() ? "#F40B0B" : "#00FF00")); // Red or Green
+            Btn_OnOff.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(DeviceActions.GetArmedState() ? "#F40B0B" : "#00FF00")); // Red or Green
+            
+            //Triggknapp
+            BellImage.Source = ChangeColor(BellImage.Source, DeviceActions.GetTriggedState() ? "#F40B0B" : "#E6D825");
+            Btn_Trigged.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(DeviceActions.GetTriggedState() ? "#F40B0B" : "#E6D825")); // Yellow
+
+
+            
+
+
+            //THRESHOLD 0-10
+            //Slider Röd linje och threshold.
+            //Tex Threshold = 7;
+            //AnimationBox.ActualHeight = 200;
+            //Röd linje = 140 (7/10 * 200) pixlar från toppen.
+            Slider_Threshold.Value = VibrationDetector.VibrationLevelThreshold;
+            _linePositionSlider_Value = (double) (-10*VibrationDetector.VibrationLevelThreshold) + 100;
+            HorizontalLine.Y1 = _linePositionSlider_Value;
+            
+
+            //Loggning
+            LogMessage(dl.LogMessage);
+                       
+        }
+        public async void SyncUserPanelWPF()
+        {
+            //1. Hämtar status från modellen via API:et
+            VDFetchStatusResponse statusResponse = await VDClientService.FetchStatusVDAsync();
+            //2. Updaterar vår lokala model VibrationDetector
+            VibrationDetector.Update(statusResponse);
+
+            DeviceLog dl = new DeviceLog();
+            dl.PopulateDeviceLog(statusResponse);
+            //3 . Uppdaterar lokal vyn och ui
+            UpdateUserPanelView(dl);
         }
 
         public async void Btn_Armed_Click(object sender, RoutedEventArgs e)
         {
-            VDFetchStatusResponse statusResponse = await VDClientService.FetchStatusVDAsync();
 
-            VibrationDetector.Update(statusResponse);
-
-            //UpdateUserPanelView();
-
-            //LogMessage(statusString);
-
-            //Get to be able to synch with other device.
-
-            //tillfällig
-            //string testMeddelande = await DeviceActions.SetVibrationLevel();
-            //LogMessage(testMeddelande);
-
-            DeviceActions.ToggleArmedState();
-
-            if (DeviceActions.GetArmedState())
-            {
-                Btn_OnOff.Content = "STOP";
-                Btn_OnOff.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F40B0B")); // Red
-                Btn_OnOff.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F40B0B")); // Red
-
-                LogMessage(DeviceActions.GetDeviceName() + " has started.");
-            }
-            else
-            {
-                Btn_OnOff.Content = "START";
-                Btn_OnOff.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00FF00")); // Green
-                Btn_OnOff.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00FF00")); // Green
-
-                LogMessage(DeviceActions.GetDeviceName() + " has stopped.");
-
-                if (DeviceActions.GetTriggedState() == true)
-                {
-
-                    DeviceActions.ToggleTriggedState();
-
-                    Btn_Trigged.Content = "TRIGGER ALARM";
-                    Btn_Trigged.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E6D825")); // Yellow
-                    Btn_Trigged.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E6D825")); // Yellow
-                    LogMessage(DeviceActions.GetDeviceName() + " alarm has been reset.");
-                }
-            }
-
+            string logMessage = await DeviceActions.ToggleArmedState();
+            SyncUserPanelWPF();
+            _vm.ButtonVM.UpdateButtonViewModel();
+            UpdateView();
 
         }
-        public void Btn_TriggedState_Click(object sender, RoutedEventArgs e)
+        public async void Btn_TriggedState_Click(object sender, RoutedEventArgs e)
         {
 
-            if (!DeviceActions.GetArmedState())
-            {
-                LogMessage("Cannot trigger alarm when device is not armed.");
-
-            }
-            else
-            {
-                DeviceActions.ToggleTriggedState();
-
-                if (DeviceActions.GetTriggedState() == true)
-                {
-                    Btn_Trigged.Content = "RESET ALARM";
-                    Btn_Trigged.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F40B0B")); // Red
-                    Btn_Trigged.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F40B0B")); // Red
-                    LogMessage(DeviceActions.GetDeviceName() + " has triggered the alarm!");
-                }
-                else
-                {
-                    Btn_Trigged.Content = "TRIGGER ALARM";
-                    Btn_Trigged.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E6D825")); // Yellow
-                    Btn_Trigged.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E6D825")); // Yellow
-                    LogMessage(DeviceActions.GetDeviceName() + " alarm has been reset.");
-                }
-            }
-
-
+            string logMessage = await DeviceActions.ToggleTriggedState();
+            SyncUserPanelWPF();
+            _vm.ButtonVM.UpdateButtonViewModel();
+            UpdateView();
         }
-
-        private void Slider_Speed_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        public ImageSource ChangeColor(ImageSource source, string color)
         {
+            // 1. Get the original DrawingImage from the Image
+            var originalDrawingImage = (DrawingImage)BellImage.Source;
+
+            // 2. Clone it so it is modifiable (unfrozen)
+            var modifiableDrawingImage = originalDrawingImage.Clone();
+
+            // 3. Access the GeometryDrawing inside the cloned DrawingImage
+            var geometryDrawing = (GeometryDrawing)modifiableDrawingImage.Drawing;
+
+            // 4. Set the new color using ColorConverter
+            geometryDrawing.Brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
+
+            // 5. Assign the modified DrawingImage back to the Image
+            return modifiableDrawingImage;
 
         }
+
         private void LogMessage(string message)
         {
             var line = @$"{DateTime.Now:yyy-MM-dd HH:mm:ss} : {message}";
@@ -151,19 +216,29 @@ namespace UserPanelWPF
         {
             // Hook up slider events
             //ScaleYSlider.ValueChanged += ScaleYSlider_ValueChanged;
-            //SpeedSlider.ValueChanged += SpeedSlider_ValueChanged;
+            //SpeedSlider.ValueChanged += VibrationSpeed_ValueChanged;
+
+            this.Dispatcher.InvokeAsync(() =>
+            {
+                // Ensure layout is measured so ActualHeight is valid
+                AnimationBox.UpdateLayout();
+                if (AnimationBox.ActualHeight > 0)
+                    _linePositionSlider_Value = AnimationBox.ActualHeight / 2;
+            });
 
             StartAnimation();
         }
 
-        private void ScaleYSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            // Update ScaleY on both vectors
-            VectorScale1.ScaleY = e.NewValue;
-            VectorScale2.ScaleY = e.NewValue;
+        private void ScaleY_VibrationLevelChanged(int newValueInt)
+        {   
+            double newValue = (double)newValueInt/5*0.85;
+
+           // Update ScaleY on both vectors
+            VectorScale1.ScaleY = newValue;
+            VectorScale2.ScaleY = newValue;
         }
 
-        private void SpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void VibrationSpeed_ValueChanged()
         {
             // Update speed by restarting the animation
             StartAnimation();
@@ -183,9 +258,12 @@ namespace UserPanelWPF
                 containerWidth = MovingVectorContainer.DesiredSize.Width;
             }
 
+
+            double convertedSpeedValue = -0.188*_vibrationSpeedValue + 2.0;
             // Get duration from slider (default fallback = 3 sec)
-            //double durationSeconds = SpeedSlider?.Value ?? 3.0;
-            double durationSeconds = 3;
+            double durationSeconds = convertedSpeedValue;
+            //
+            //double durationSeconds = 2;
 
             double from = 20;
             double to = -containerWidth / 2 + 20;
@@ -202,5 +280,25 @@ namespace UserPanelWPF
 
             VectorTransform.BeginAnimation(TranslateTransform.XProperty, _animation);
         }
+
+        private void ThresholdChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
+            if (_skipSliderAction)
+            {
+                _skipSliderAction = false;
+                return; // Skip first event
+            }
+
+            var sliderValue = Slider_Threshold.Value;
+            SliderValues.Add(sliderValue);
+            _hasSliderChanged = true;
+
+        }
+
+        //private void ThresholdChanged(object sender, RoutedPropertyChangedEventArgs<T> e)
+        //{
+
+        //}
     }
 }

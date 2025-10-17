@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UserPanelWPF.Models;
+using static UserPanelWPF.Models.Enumerators;
 
 
 namespace UserPanelWPF.Services
@@ -11,13 +12,21 @@ namespace UserPanelWPF.Services
     public static class DeviceActions
     {
         //public static bool RunningState { get; private set; } = false;
-        public static void ToggleArmedState()
+        public static async Task<string> ToggleArmedState()
         {
-            VibrationDetector.AlarmArmed = !VibrationDetector.AlarmArmed;
+            int userPanelAction = (int)DeviceAction.ArmDevice;
+            string logMessage = await VDClientService.SetVDAsync(0, userPanelAction);
+            return logMessage;
+
+            //VibrationDetector.AlarmArmed = !VibrationDetector.AlarmArmed;
         }
-        public static void ToggleTriggedState()
+        public static async Task<string> ToggleTriggedState()
         {
-            VibrationDetector.AlarmTriggered = !VibrationDetector.AlarmTriggered;
+            int userPanelAction = (int)DeviceAction.TriggerDevice;
+            string logMessage = await VDClientService.SetVDAsync(0, userPanelAction);
+            return logMessage;
+
+            //VibrationDetector.AlarmTriggered = !VibrationDetector.AlarmTriggered;
         }
         public static string GetDeviceName()
         {
@@ -32,10 +41,11 @@ namespace UserPanelWPF.Services
             return VibrationDetector.AlarmTriggered;
         }
 
-        public async static Task<string> SetVibrationLevel()
+        public async static Task<string> SetThresholdLevel(double sliderValue)
         {
-            string someMessage = await VDClientService.SetVDAsync();
-            return someMessage;
+            int userPanelAction = (int)DeviceAction.SetThreshold;
+            string logMessage = await VDClientService.SetVDAsync(sliderValue,userPanelAction);
+            return logMessage;
         }
     }
 }

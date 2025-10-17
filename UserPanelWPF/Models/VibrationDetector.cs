@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UserPanelWPF.Services;
 
 namespace UserPanelWPF.Models
 {
@@ -22,8 +23,29 @@ namespace UserPanelWPF.Models
 
         public static int VibrationLevelThreshold { get; set; }
 
+        public static void Btn_Armed()
+        {
+            DeviceActions.ToggleArmedState();
 
-    
+            if (DeviceActions.GetTriggedState() == true)
+            {
+                DeviceActions.ToggleTriggedState();
+            }
+
+        }
+
+        public static void Btn_Trigged()
+        {
+            if (!DeviceActions.GetArmedState())
+            {
+                //make sure the button does nothing if the device is not armed
+            }
+            else
+            {
+                DeviceActions.ToggleTriggedState();
+            }
+        }
+
 
         public static void Update(VDFetchStatusResponse statusResponse)
         {

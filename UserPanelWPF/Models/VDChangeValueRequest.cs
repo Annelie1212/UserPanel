@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using static UserPanelWPF.Models.Enumerators;
+
 
 namespace UserPanelWPF.Models
 {
@@ -8,7 +10,7 @@ namespace UserPanelWPF.Models
         public int VibrationDetectorId { get; set; }
 
         [Required]
-        public string UserPanelAction { get; set; } = string.Empty;
+        public DeviceAction UserPanelAction { get; set; } = (DeviceAction)99;
 
         [Required]
         public double NewValue { get; set; }

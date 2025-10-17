@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 using UserPanelWPF.Models;
+using static UserPanelWPF.Models.Enumerators;
 
 namespace UserPanelWPF.Services
 {
@@ -17,7 +18,7 @@ namespace UserPanelWPF.Services
             //Fake, sätt senare till att ändras dynamiskt beroende på inloggad user.
             var vDFetchStatusRequest = new VDFetchStatusRequest()
             {
-                VibrationDetectorId = 12,
+                VibrationDetectorId = 1,
                 UserId = 1, // This should be dynamically set based on the logged-in user
                 UserPanelActionDate = DateTime.Now
             };
@@ -26,9 +27,15 @@ namespace UserPanelWPF.Services
 
             var fetch_result = await http.PostAsJsonAsync("https://localhost:7034/api/VibrationDetectorsSync", vDFetchStatusRequest);
 
+            //What to do with all my status codes?
+            //fetch_result.StatusCode.ToString();
+
             if (fetch_result.IsSuccessStatusCode)
             {
                 var responseContent = await fetch_result.Content.ReadFromJsonAsync<VDFetchStatusResponse>();
+
+
+
                 if (responseContent != null && responseContent.RequestSuccessful)
                 {
                     VDFetchStatusResponse response = new VDFetchStatusResponse();
@@ -70,14 +77,14 @@ namespace UserPanelWPF.Services
             }
         }
 
-        public async static Task<string> SetVDAsync()
+        public async static Task<string> SetVDAsync(double sliderValue,int userPanelAction)
         {
 
             var changeValueRequest = new VDChangeValueRequest()
             {
                 VibrationDetectorId = 1,
-                UserPanelAction = "SetVibrationDetector",
-                NewValue = 10,
+                UserPanelAction = (DeviceAction)userPanelAction,
+                NewValue = sliderValue,
                 UserId = 1, // This should be dynamically set based on the logged-in user
                 UserPanelActionDate = DateTime.Now
             };
@@ -86,10 +93,13 @@ namespace UserPanelWPF.Services
             var post_result = await http.PostAsJsonAsync("https://localhost:7034/api/VibrationDetectors", changeValueRequest);
             //var get_result = await http.GetFromJsonAsync<VDChangeValueResponse>("https://localhost:7170/api/products");
 
+
            
             if (post_result.IsSuccessStatusCode)
             {
                 var responseContent = await post_result.Content.ReadFromJsonAsync<VDChangeValueResponse>();
+
+
                 if (responseContent != null && responseContent.RequestSuccessful)
                 {
                     return $"Vibration Detector updated successfully.from id:{responseContent.VibrationDetectorId}";

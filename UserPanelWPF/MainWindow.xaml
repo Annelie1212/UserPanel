@@ -19,13 +19,13 @@
 
             <!-- Centered square animation box -->
             <Border x:Name="AnimationBox"
-        Width="200" Height="200"
-        Background="LightGray"
-        BorderBrush="Black" BorderThickness="2"
-        CornerRadius="6"
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        ClipToBounds="True">
+                    Width="200" Height="200"
+                    Background="LightGray"
+                    BorderBrush="Black" BorderThickness="2"
+                    CornerRadius="6"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    ClipToBounds="True">
 
                 <Canvas Background="Transparent">
                     <!-- Container for two vectors side by side -->
@@ -50,33 +50,24 @@
                             <ContentControl Content="{StaticResource ActivityVector}" />
                         </Viewbox>
                     </StackPanel>
+
+                    <Line x:Name="HorizontalLine"
+                      X1="0"
+                      X2="{Binding ActualWidth, ElementName=AnimationBox}"
+                      Y1="100"
+                      Y2="{Binding Y1, ElementName=HorizontalLine}"
+                      Stroke="Red"
+                      StrokeThickness="2"
+                      SnapsToDevicePixels="True" />
+
                 </Canvas>
             </Border>
 
-            <!-- 👇 Sliders under the animation box -->
-            <!--<StackPanel VerticalAlignment="Bottom" Margin="20" Orientation="Vertical">
-                <TextBlock Text="Scale Y:" FontWeight="Bold" Margin="0,0,0,4"/>
-                <Slider x:Name="ScaleYSlider" Minimum="0.5" Maximum="2" Value="1" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
 
-                <TextBlock Text="Animation Speed (seconds):" FontWeight="Bold" Margin="0,20,0,4"/>
-                <Slider x:Name="SpeedSlider" Minimum="0.1" Maximum="5" Value="3" TickFrequency="0.1" IsSnapToTickEnabled="True"/>
-            </StackPanel>-->
 
         </Grid>
 
 
-        <!--<TextBlock Grid.Row="0" 
-               Foreground="SlateGray"  
-               FontSize="72"
-               Style="{StaticResource fan-icon}" 
-               RenderTransformOrigin="0.5,0.5"
-               >
-            <TextBlock.RenderTransform>
-                <RotateTransform x:Name="Rotation" Angle="0">
-
-                </RotateTransform>
-            </TextBlock.RenderTransform>
-        </TextBlock>-->
         
         
 
@@ -85,9 +76,9 @@
              Margin="30 30"-->
 
 
-            <Slider x:Name="Slider_Speed" IsSnapToTickEnabled="True" TickFrequency="0.5" Value="2" Minimum="0.5" Maximum="4"
+            <Slider x:Name="Slider_Threshold" IsSnapToTickEnabled="True" TickFrequency="1" Value="2" Minimum="0" Maximum="10"
              Margin="30 30"
-             ValueChanged="Slider_Speed_ValueChanged"
+             ValueChanged="ThresholdChanged"
              />
             <Grid>
 
@@ -96,9 +87,22 @@
                     <ColumnDefinition Width="3*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" x:Name="Btn_Trigged" Style="{StaticResource btn-secondary}" Content="" Click="Btn_TriggedState_Click" />
+                <Button Grid.Column="0"
+                    x:Name="Btn_Trigged"
+                    Style="{StaticResource btn-secondary}"
+                    Click="Btn_TriggedState_Click">
+                    <Image x:Name="BellImage" 
+                           Source="{StaticResource BellIcon}"
+                           Width="20" Height="20"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center">
+                        
+                    </Image>
+                </Button>
+
                 <!--#endregion-->
                 <Button Grid.Column="1" x:Name="Btn_OnOff" Style="{StaticResource btn-primary}" Content="START" Click="Btn_Armed_Click" />
+                
                 <!--<Button x:Name="Btn_OnOff" Style="{StaticResource btn-primary}" Content="START" />-->
                 <!--Bra för skrollning-->
             </Grid>
