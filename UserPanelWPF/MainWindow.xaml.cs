@@ -102,11 +102,14 @@ namespace UserPanelWPF
             //0 till 100
             //HorizontalLine.Y1 = 100;
 
-            PostSliderValue();
+            //--------------TILLBAKA SEN---------------
+            //PostSliderValue();
+
             // Runs every second
             //Console.WriteLine($"Tick doing work at {DateTime.Now}");
 
-            SyncUserPanelWPF();
+            //--------------TILLBAKA SEN---------------
+            //SyncUserPanelWPF();
         }
         public void UpdateUserPanelView(DeviceLog dl)
         {
@@ -137,7 +140,7 @@ namespace UserPanelWPF
             //Röd linje = 140 (7/10 * 200) pixlar från toppen.
             Slider_Threshold.Value = VibrationDetector.VibrationLevelThreshold;
             _linePositionSlider_Value = (double) (-10*VibrationDetector.VibrationLevelThreshold) + 100;
-            HorizontalLine.Y1 = _linePositionSlider_Value;
+            ThresholdLine.Y1 = _linePositionSlider_Value;
             
 
             //Loggning
@@ -148,6 +151,7 @@ namespace UserPanelWPF
         {
             //1. Hämtar status från modellen via API:et
             VDFetchStatusResponse statusResponse = await VDClientService.FetchStatusVDAsync();
+            
             //2. Updaterar vår lokala model VibrationDetector
             VibrationDetector.Update(statusResponse);
 
@@ -159,6 +163,7 @@ namespace UserPanelWPF
 
         public async void Btn_Armed_Click(object sender, RoutedEventArgs e)
         {
+
 
             string logMessage = await DeviceActions.ToggleArmedState();
             SyncUserPanelWPF();
@@ -293,6 +298,8 @@ namespace UserPanelWPF
             var sliderValue = Slider_Threshold.Value;
             SliderValues.Add(sliderValue);
             _hasSliderChanged = true;
+
+
 
         }
 

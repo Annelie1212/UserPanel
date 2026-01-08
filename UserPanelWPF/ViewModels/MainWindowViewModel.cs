@@ -66,6 +66,12 @@ namespace UserPanelWPF.ViewModels
 
         public class SliderViewModel
         {
+            public int SliderValue { get; set; }
+            public double LinePositionSliderValue { get; set; }
+            public void UpdateButtonViewModel() { 
+                SliderValue = VibrationDetector.VibrationLevelThreshold;
+                LinePositionSliderValue = (double)(-10 * VibrationDetector.VibrationLevelThreshold) + 100;
+            }
         }
 
 

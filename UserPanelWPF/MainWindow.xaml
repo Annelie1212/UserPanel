@@ -15,7 +15,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid x:Name="RootGrid" Background="Black">
+        <Grid Grid.Row="0" x:Name="RootGrid" Background="Black">
 
             <!-- Centered square animation box -->
             <Border x:Name="AnimationBox"
@@ -51,11 +51,11 @@
                         </Viewbox>
                     </StackPanel>
 
-                    <Line x:Name="HorizontalLine"
+                    <Line x:Name="ThresholdLine"
                       X1="0"
                       X2="{Binding ActualWidth, ElementName=AnimationBox}"
                       Y1="100"
-                      Y2="{Binding Y1, ElementName=HorizontalLine}"
+                      Y2="{Binding Y1, ElementName=ThresholdLine}"
                       Stroke="Red"
                       StrokeThickness="2"
                       SnapsToDevicePixels="True" />
@@ -80,7 +80,8 @@
              Margin="30 30"
              ValueChanged="ThresholdChanged"
              />
-            <Grid>
+            
+            <Grid x:Name="ButtonGrid" >
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

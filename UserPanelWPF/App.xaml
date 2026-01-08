@@ -13,11 +13,11 @@
                 <ResourceDictionary Source="images/activity.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <!--<FontFamily x:key=""></FontFamily>-->
+            <!--<FontFamily x:key=""></FontFamily>--><!--
         <Style x:Key="fan-icon" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Comic Sans MS"/>
             <Setter Property="Text" Value="Start"/>
-        </Style>
+        </Style>-->
 
         <Style x:Key="btn-primary" TargetType="Button">
             <Setter Property="Background" Value="Black"/>

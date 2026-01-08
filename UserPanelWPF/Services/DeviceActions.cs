@@ -26,7 +26,7 @@ namespace UserPanelWPF.Services
             string logMessage = await VDClientService.SetVDAsync(0, userPanelAction);
             return logMessage;
 
-            //VibrationDetector.AlarmTriggered = !VibrationDetector.AlarmTriggered;
+            //VibrationDetector.AlarmTriggered = !VibrationDetector.AlarmTriggered;( finns i servern vibradetectors så den kan inte heta samma här)
         }
         public static string GetDeviceName()
         {
@@ -43,7 +43,14 @@ namespace UserPanelWPF.Services
 
         public async static Task<string> SetThresholdLevel(double sliderValue)
         {
+            
+
             int userPanelAction = (int)DeviceAction.SetThreshold;
+
+
+
+            //var logMessage = "fake: set threshold success!";
+
             string logMessage = await VDClientService.SetVDAsync(sliderValue,userPanelAction);
             return logMessage;
         }
